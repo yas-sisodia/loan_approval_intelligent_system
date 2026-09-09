@@ -79,19 +79,36 @@ st.markdown(
 # ---------------------------------------------------------
 # Pipeline Ingestion
 # ---------------------------------------------------------
+# MODEL_FILE = "best_loan_model_pipeline.joblib"
+
+# @st.cache_resource
+# def load_pipeline(path: str):
+#     if not os.path.exists(path):
+#         return None
+#     return joblib.load(path)
+
+# pipeline = load_pipeline(MODEL_FILE)
+
+# if pipeline is None:
+#     st.error(f"Missing '{MODEL_FILE}'. Please verify the serialized artifact is in the working directory.")
+#     st.stop()
 MODEL_FILE = "best_loan_model_pipeline.joblib"
 
 @st.cache_resource
 def load_pipeline(path: str):
     if not os.path.exists(path):
-        return None
-    return joblib.load(path)
+        import train
+        train.train_and_export()
+    
+    try:
+        return joblib.load(path)
+    except Exception:
+        # If unpickling fails due to version mismatch, retrain fresh
+        import train
+        train.train_and_export()
+        return joblib.load(path)
 
 pipeline = load_pipeline(MODEL_FILE)
-
-if pipeline is None:
-    st.error(f"Missing '{MODEL_FILE}'. Please verify the serialized artifact is in the working directory.")
-    st.stop()
 
 # ---------------------------------------------------------
 # Main Single-Screen Split Interface
